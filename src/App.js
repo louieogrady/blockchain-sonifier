@@ -5,17 +5,17 @@ import Tone from "tone"
 
 class App extends Component {
   state = {
-    bitcoinPrice: null
+    bitcoin: null,
+    x: "x"
   };
 
   synth1 = new Tone.AMSynth().toMaster();
 
   handleClick = () => {
     this.synth1.triggerAttack();
-    this.synth1.frequency.value = this.state.bitcoinPrice
+    this.synth1.frequency.value = this.state.bitcoin / 20
     console.log('synth started')
   }
-
 
   // coincap JSON API
   coincapBitCoinPrice = "https://api.coincap.io/v2/rates/bitcoin";
@@ -23,25 +23,16 @@ class App extends Component {
   // coincap websockets
   pricesWs = ('wss://ws.coincap.io/prices?assets=bitcoin')
 
-
-  // fetchFromAPI = () => {
-  //   fetch(this.coincapBitCoinPrice)
-  //     .then(resp => resp.json())
-  //     .then(data => console.log(data.data.rateUsd))
-  //     .then(data => this.setState({ bitcoinPrice: data }));
-  // };
-
   getBitcoinPrice = () => {
    this.connection = new WebSocket('wss://ws.coincap.io/prices?assets=bitcoin');
    // listen to onmessage event
    this.connection.onmessage = e => {
      // add the new message to state
    console.log(JSON.parse(e.data));
-   const x = JSON.parse(e.data);
-   console.log(x.bitcoin);
-   // debugger
+   const bitcoinPrice = JSON.parse(e.data);
+   console.log(bitcoinPrice.bitcoin);
        this.setState({
-       bitcoinPrice : x.bitcoin
+       bitcoin : bitcoinPrice.bitcoin
      })
    };
   }
@@ -49,8 +40,15 @@ class App extends Component {
   componentDidMount() {
     // this.fetchFromAPI();
     this.getBitcoinPrice();
-    console.log(this.state.bitcoinPrice - 7000);
+
+    setInterval(() => {
+    // console.log(this.state.bitcoin / 20);
+    this.synth1.frequency.value = this.state.bitcoin / 20
+    console.log(this.synth1.frequency.value);
+
+  }, 1000);
   }
+
 
 
   render() {
