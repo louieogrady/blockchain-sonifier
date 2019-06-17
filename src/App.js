@@ -4,7 +4,8 @@ import Tone from "tone";
 
 class App extends Component {
   state = {
-    bitcoin: null
+    bitcoin: null,
+    ethereum: null
   };
 
   // create synths
@@ -13,7 +14,10 @@ class App extends Component {
   // coincap websockets
   pricesWs = "wss://ws.coincap.io/prices?assets=bitcoin";
 
-  getBitcoinPrice = () => {
+
+
+
+  getPrices = () => {
     this.connection = new WebSocket(
       "wss://ws.coincap.io/prices?assets=bitcoin,ethereum"
     );
@@ -24,25 +28,34 @@ class App extends Component {
       console.log(JSON.parse(e.data));
       const data = JSON.parse(e.data);
 
-      // switch (data)
-
       if (data.bitcoin) {
         console.log(data.bitcoin);
         this.setState({
           bitcoin: data.bitcoin
         });
+      } else {
+        console.log('no bitcoin price update')
+      }
+
+      if (data.ethereum) {
+        console.log(data.ethereum);
+        this.setState({
+          ethereum: data.ethereum
+        });
+      } else {
+        console.log('no ethereum price update')
       }
     };
   };
 
   componentDidMount() {
-    this.getBitcoinPrice();
+    this.getPrices();
 
     setInterval(() => {
-      this.bitcoinSynth.frequency.value = this.state.bitcoin / 25;
+      this.bitcoinSynth.frequency.value = this.state.bitcoin / 25; // bringing down the frequency to something more manageable
       console.log(this.bitcoinSynth.frequency.value);
-    }, 1000);
-    
+    }, 1000);                                                      // osc frequency is updated every second
+
   }
 
   handleClick = () => {
@@ -54,7 +67,8 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <h1> {this.state.bitcoin} </h1>
+        <h1> bitcoin: {this.state.bitcoin} </h1>
+        <h1> ethereum: {this.state.ethereum} </h1>
 
         <button onClick={this.handleClick}> Start Synth </button>
       </div>
