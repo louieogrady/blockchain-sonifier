@@ -14,6 +14,7 @@ class App extends Component {
   };
 
   bitcoinPrice = this.state.priceData[0].bitcoin
+  ethPrice = this.state.priceData[0].ethereum
 
   autoFilter = new Tone.AutoFilter("4n").toMaster().start();
   // create synths
@@ -50,7 +51,7 @@ class App extends Component {
     // listen to onmessage event
     this.connection.onmessage = e => {
       // work the onmessage response
-      console.log(JSON.parse(e.data));
+      // console.log(JSON.parse(e.data));
       const data = JSON.parse(e.data);
 
       // this.setState({
@@ -96,27 +97,35 @@ class App extends Component {
   componentDidMount() {
     this.getPrices();
 
-
     setInterval(() => {
-      let bitcoinPrice = this.state.priceData[0].bitcoin
-    this.bitcoinSynth.frequency.value = bitcoinPrice[bitcoinPrice.length-1] / 25; // selects last item in array, bringing down the frequency to something more manageable
+      console.log(this.state.priceData[0].bitcoin)
+      if (this.state.priceData[0].bitcoin.length > 0) {
+      this.bitcoinSynth.frequency.value = this.state.priceData[0].bitcoin[this.state.priceData[0].bitcoin.length-1] / 25; // selects last item in array, bringing down the frequency to something more manageable
       console.log(this.bitcoinSynth.frequency.value);
+    }
     }, 1000); // osc frequency is updated every second
   }
+
+
+
 
   randomTriggerInterval = () => Math.floor(Math.random() * 15000) + 1000; // random generates number between 1 and 15
 
   handleClick = () => {
     let bitcoinPrice = this.state.priceData[0].bitcoin
-    this.bitcoinSynth.frequency.value = bitcoinPrice[bitcoinPrice.length-1]
+    this.bitcoinSynth.frequency.value = this.bitcoinPrice[this.bitcoinPrice.length-1]
     this.bitcoinSynth.triggerAttack();
     console.log("synth started");
 
+
     setInterval(() => {
       // had to put this here rather than componentDidMount
-      this.ethSynth.triggerAttack(this.state.priceData[0].ethereum / 8);
-    }, this.randomTriggerInterval()); // MembraneSynth is triggered by the amount of seconds determined by the random Interval generator
-  };
+      if (this.state.priceData[0].ethereum.length > 0) {
+      this.ethSynth.triggerAttack(this.state.priceData[0].ethereum[this.state.priceData[0].ethereum.length-1] / 8);
+    }
+  }, this.randomTriggerInterval()); // MembraneSynth is triggered by the amount of seconds determined by the random Interval generator
+}
+
 
   render() {
     let bitcoinPrice = this.state.priceData[0].bitcoin
