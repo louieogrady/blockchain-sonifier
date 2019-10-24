@@ -7,17 +7,17 @@ class App extends Component {
   state = {
     priceData: [
       {
-        ethereum: [],
-        bitcoin: [],
-        currentTimes: []
+        ethereum: [{id: "eth", data: {x: [0], y: [0]} }],
+        bitcoin: [{id: "bitcoin", data: {x: [0], y: [0] }}],
+        currentTimes: [0]
       }
     ]
     // bitcoin: null,
     // ethereum: null
   };
 
-  bitcoinPrice = this.state.priceData[0].bitcoin;
-  ethPrice = this.state.priceData[0].ethereum;
+  // bitcoinPrice = this.state.priceData[0].bitcoin[0].data.x;
+  // ethPrice = this.state.priceData[0].ethereum[0].data.x;
 
   autoFilter = new Tone.AutoFilter("4n").toMaster().start();
   // create synths
@@ -74,58 +74,88 @@ class App extends Component {
         // this.setState({
         //   ethereum: data.ethereum
         // });
+        //
 
         this.setState({
           priceData: [
             {
-              ethereum: [...this.state.priceData[0].ethereum, data.ethereum],
-              bitcoin: [...this.state.priceData[0].bitcoin, data.bitcoin],
+              ethereum: [{id: 'ethereum', data: {
+                x: [...this.state.priceData[0].ethereum[0].data.x, data.ethereum],
+                y: [...this.state.priceData[0].currentTimes]
+              }
+            }],
+              bitcoin: [{id: 'bitcoin', data: {
+                x: [...this.state.priceData[0].bitcoin[0].data.x, data.bitcoin],
+                y: [...this.state.priceData[0].currentTimes]
+              }
+            }],
               currentTimes: [...this.state.priceData[0].currentTimes]
             }
           ]
         });
+      // Chart.update(); // redraw the chart when the information comes in
       } else if (data.bitcoin) {
         this.setState({
           priceData: [
             {
-              ethereum: [...this.state.priceData[0].ethereum],
-              bitcoin: [...this.state.priceData[0].bitcoin, data.bitcoin],
+              ethereum: [{id: 'ethereum', data: {
+                x: [...this.state.priceData[0].ethereum[0].data.x],
+                y: [...this.state.priceData[0].currentTimes]
+              }
+            }],
+              bitcoin: [{id: 'bitcoin', data: {
+                x: [...this.state.priceData[0].bitcoin[0].data.x, data.bitcoin],
+                y: [...this.state.priceData[0].currentTimes]
+              }
+            }],
               currentTimes: [...this.state.priceData[0].currentTimes]
             }
           ]
-        });
+        })
+        // Chart.update(); // redraw the chart when the information comes in
       } else if (data.ethereum) {
         this.setState({
           priceData: [
             {
-              ethereum: [...this.state.priceData[0].ethereum, data.ethereum],
-              bitcoin: [...this.state.priceData[0].bitcoin],
+              ethereum: [{id: 'ethereum', data: {
+                x: [...this.state.priceData[0].ethereum[0].data.x, data.ethereum],
+                y: [...this.state.priceData[0].currentTimes]
+              }
+            }],
+              bitcoin: [{id: 'bitcoin', data: {
+                x: [...this.state.priceData[0].bitcoin[0].data.x],
+                y: [...this.state.priceData[0].currentTimes]
+              }
+            }],
               currentTimes: [...this.state.priceData[0].currentTimes]
             }
           ]
         });
+        // Chart.update(); // redraw the chart when the information comes in
       }
     };
   };
 
   componentDidMount() {
+
     this.getPrices();
 
-    let bitcoinPrice = this.state.priceData[0].bitcoin;
-    this.bitcoinSynth.frequency.value = this.bitcoinPrice[this.bitcoinPrice.length - 1];
+    let bitcoinPrice = this.state.priceData[0].bitcoin[0].data.x[this.state.priceData[0].bitcoin[0].data.x.length - 1];
+    this.bitcoinSynth.frequency.value = this.bitcoinPrice;
     this.bitcoinSynth.triggerAttack();
     console.log("synth started");
 
     setInterval(() => {
       // had to put this here rather than componentDidMount
-      if (this.state.priceData[0].ethereum.length > 0) {
+      if (this.state.priceData[0].ethereum[0].data.x.length > 0) {
         this.ethSynth.triggerAttack(
-          this.state.priceData[0].ethereum[
-            this.state.priceData[0].ethereum.length - 1
+          this.state.priceData[0].ethereum[0].data.x[
+            this.state.priceData[0].ethereum[0].data.x.length - 1
           ] / 8
         );
       }
     }, this.randomTriggerInterval()); // MembraneSynth is triggered by the amount of seconds determined by the random Interval generator
+
 
     setInterval(() => {
       let today = new Date();
@@ -134,8 +164,12 @@ class App extends Component {
       this.setState({
         priceData: [
           {
-          bitcoin: [...this.state.priceData[0].bitcoin],
-          ethereum: [...this.state.priceData[0].ethereum],
+          bitcoin: [
+            {id: 'bitcoin',
+            data: {x: [...this.state.priceData[0].bitcoin[0].data.x],
+              y: [...this.state.priceData[0].currentTimes, time]}}
+            ],
+          ethereum: [{id: 'eth', data: {x: [...this.state.priceData[0].ethereum[0].data.x], y: [...this.state.priceData[0].currentTimes, time] }}],
           currentTimes: [...this.state.priceData[0].currentTimes, time]
           }
         ]
@@ -143,10 +177,10 @@ class App extends Component {
     }, 1000)
 
     setInterval(() => {
-      if (this.state.priceData[0].bitcoin.length > 0) {
+      if (this.state.priceData[0].bitcoin[0].data.x.length > 0) {
         this.bitcoinSynth.frequency.value =
-          this.state.priceData[0].bitcoin[
-            this.state.priceData[0].bitcoin.length - 1
+          this.state.priceData[0].bitcoin[0].data.x[
+            this.state.priceData[0].bitcoin[0].data.x.length - 1
           ] / 25; // selects last item in array, bringing down the frequency to something more manageable
         console.log(this.bitcoinSynth.frequency.value);
       }
@@ -160,23 +194,23 @@ class App extends Component {
 
 
   render() {
-    let bitcoinPrice = this.state.priceData[0].bitcoin;
-    let ethPrice = this.state.priceData[0].ethereum;
+    console.log(this.state)
+    let bitcoinPrice = this.state.priceData[0].bitcoin[0].data.x;
+    let ethPrice = this.state.priceData[0].ethereum[0].data.x;
     return (
       <div className="App">
-        <h1> bitcoin: {this.state.priceData[0].bitcoin[this.state.priceData[0].bitcoin.length - 1]} </h1>
-        <h1> ethereum: {this.state.priceData[0].ethereum[this.state.priceData[0].ethereum.length - 1]} </h1>
+        <h1> bitcoin: {this.state.priceData[0].bitcoin[0].data.x[this.state.priceData[0].bitcoin[0].data.x.length - 1]} </h1>
+        <h1> ethereum: {this.state.priceData[0].ethereum[0].data.x[this.state.priceData[0].ethereum[0].data.x.length - 1]} </h1>
         <h1> current time: {this.state.priceData[0].currentTimes[this.state.priceData[0].currentTimes.length - 1]} </h1>
 
-
         <button onClick={this.handleClick}> Start Synth </button>
+        <div className="Chart-Container" style= {{ height: '10em', width: '10em' }}>
+        <Chart priceData={this.state.priceData}/>
+        </div>
+
 
       </div>
     );
   }
 }
 export default App;
-
-// <div className="Chart-Container" style= {{ height: '10em', width: '10em' }}>
-// <Chart priceData={this.state.priceData[0]}/>
-// </div>
