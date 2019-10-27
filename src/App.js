@@ -3,8 +3,6 @@ import "./App.css";
 import Tone from "tone";
 import Chart from "./Chart.js";
 
-
-
 class App extends Component {
   state = {
     priceData: [
@@ -13,17 +11,10 @@ class App extends Component {
         bitcoin: [{x: 0, y: 0 } ]
       }
     ]
-    // bitcoin: null,
-    // ethereum: null
   };
 
   eth = 0
   bit = 0
-
-
-
-  // bitcoinPrice = this.state.priceData[0].bitcoin[0].data.x;
-  // ethPrice = this.state.priceData[0].ethereum[0].data.x;
 
   autoFilter = new Tone.AutoFilter("4n").toMaster().start();
   // create synths
@@ -42,9 +33,7 @@ class App extends Component {
       sustain: 2,
       release: 0.5
     }
-  })
-    .connect(this.autoFilter)
-    .toMaster();
+  }).connect(this.autoFilter).toMaster();
 
   ethSynth = new Tone.MembraneSynth().toMaster();
 
@@ -58,8 +47,6 @@ class App extends Component {
 
     // listen to onmessage event
     this.connection.onmessage = e => {
-        // work the onmessage response
-        // console.log(JSON.parse(e.data));
         const data = JSON.parse(e.data);
         let today = new Date();
         let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
@@ -75,18 +62,6 @@ class App extends Component {
         };
         this.eth = ethereumUpdate
         this.bit = bitcoinUpdate
-        // this.setState({
-        //   priceData: data
-        // });
-
-        // if (data.bitcoin) {
-        //   console.log(data.bitcoin);
-        //   this.setState({
-        //     bitcoin: data.bitcoin
-        //   });
-        // } else {
-        //   console.log("no bitcoin price update");
-        // }
 
         if (data.ethereum && data.bitcoin) {
           console.log(data.ethereum);
@@ -112,13 +87,10 @@ class App extends Component {
             }]
           })
         }
-
       }
     }
 
-
   componentDidMount() {
-
     this.getPrices();
     console.log(this.bit.data)
     if (this.bit.data) {
@@ -170,11 +142,7 @@ class App extends Component {
 
   handleClick = () => {}
 
-
-
   render() {
-
-
     console.log(this.state.priceData)
     return (
       <div className="App">
@@ -184,9 +152,6 @@ class App extends Component {
         <div className="Chart-Container" style= {{ height: '10em', width: '10em' }}>
         <Chart priceData={this.state.priceData}/>
         </div>
-
-
-
       </div>
     );
   }
