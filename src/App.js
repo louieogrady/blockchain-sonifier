@@ -38,6 +38,8 @@ function App() {
 
 
   // TODO: CHANGE to bitfinex websockets: https://docs.bitfinex.com/reference#rest-public-ticker
+  //  NOTE: ratelimit of 20 per minute - may have to use setinterval or settimeout
+
   // coincap websockets
   const connection = new WebSocket(
     "wss://ws.coincap.io/prices?assets=bitcoin,ethereum"
