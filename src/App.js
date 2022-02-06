@@ -13,26 +13,28 @@ function App() {
   const [pinMatrix, setPinMatrix] = useState(initialPinMatrixState);
   const [priceData, setPriceData] = useState(initialPriceDataState);
 
-  const autoFilter = new Tone.AutoFilter("4n").toDestination().start();
+  // let toneInstance;
+
+  // const autoFilter = new Tone.AutoFilter("8n").toDestination().start();
   // create synths
   const bitcoinSynth = new Tone.FMSynth({
-    harmonicity: 10,
+    harmonicity: 8,
     detune: 0,
     envelope: {
-      attack: 0.01,
-      decay: 0.01,
+      attack: 0.1,
+      decay: 0.5,
       sustain: 1,
-      release: 0.5
+      release: 4
     },
     modulationEnvelope: {
-      attack: 1,
+      attack: 0.5,
       decay: 0,
       sustain: 1,
-      release: 0.5
+      release: 4
     }
-  }).connect(autoFilter).toDestination();
+  }).toDestination();
 
-  const ethSynth = new Tone.MembraneSynth().toDestination();
+  const ethSynth = new Tone.Oscillator().toDestination();
 
   // coincap websockets
   const connection = new WebSocket(
@@ -75,6 +77,11 @@ function App() {
   }
 
   useEffect(() => {
+
+    async function startTone() {
+      await Tone.start()
+    }
+    startTone();
     // listen to onmessage event
     connection.onmessage = event => {
       // Parse data
@@ -85,14 +92,20 @@ function App() {
       setStateOnReceivingData(currentTime, data);
 
       if (Tone.context.state === 'running') {
-        if (data.bitcoin) {
-          bitcoinSynth.frequency.value = (data.bitcoin % 13000).toFixed(2);
-          bitcoinSynth.triggerAttack();
-        }
-      }
-  
-    }
+        // if (data.bitcoin) {
+        //   bitcoinSynth.frequency.value = (data.bitcoin % 10000).toFixed(2);
+        //   // bitcoinSynth.triggerAttackRelease();
+        //   bitcoinSynth.triggerAttack(bitcoinSynth.frequency.value);
 
+        // }
+
+        if (data.ethereum) {
+          ethSynth.frequency.value = data.ethereum % 1000;
+          ethSynth.start()
+        }
+
+      }
+    }
 
   }, [])
 
@@ -100,11 +113,10 @@ function App() {
   const randomTriggerInterval = () => Math.floor(Math.random() * 15000) + 1000; // random generates number between 1 and 15
 
   const handleClick = async () => {
-    const response = await Tone.start()
+    
     if (Tone.context.state !== 'running') {
       Tone.context.resume();
     }
-
   }
 
   return (
