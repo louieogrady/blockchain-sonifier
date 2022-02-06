@@ -1,24 +1,23 @@
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import Tone from "tone";
 import Chart from "./Chart.js";
 
-class App extends Component {
-  state = {
-    priceData: [
-      {
-        ethereum: [{x: 0, y: 0} ],
-        bitcoin: [{x: 0, y: 0 } ]
-      }
-    ]
-  };
+function App() {
+  const initialPinMatrixState = Array(4).fill(0).map(x => Array(4).fill(0));
+  const initialPriceDataState = {
+    ethereum: [{ x: 0, y: 0 }],
+    bitcoin: [{ x: 0, y: 0 }]
+  }
 
-  eth = 0
-  bit = 0
+  const [pinMatrix, setPinMatrix] = useState(initialPinMatrixState);
+  const [priceData, setPriceData] = useState(initialPriceDataState);
 
-  autoFilter = new Tone.AutoFilter("4n").toMaster().start();
+
+
+  const autoFilter = new Tone.AutoFilter("4n").toMaster().start();
   // create synths
-  bitcoinSynth = new Tone.FMSynth({
+  const bitcoinSynth = new Tone.FMSynth({
     harmonicity: 10,
     detune: 0,
     envelope: {
@@ -33,127 +32,85 @@ class App extends Component {
       sustain: 2,
       release: 0.5
     }
-  }).connect(this.autoFilter).toMaster();
+  }).connect(autoFilter).toMaster();
 
-  ethSynth = new Tone.MembraneSynth().toMaster();
+  const ethSynth = new Tone.MembraneSynth().toMaster();
 
   // coincap websockets
-  pricesWs = "wss://ws.coincap.io/prices?assets=bitcoin";
+  const connection = new WebSocket(
+    "wss://ws.coincap.io/prices?assets=bitcoin,ethereum"
+  );
 
-  getPrices = () => {
-    this.connection = new WebSocket(
-      "wss://ws.coincap.io/prices?assets=bitcoin,ethereum"
-    );
+  useEffect(() => {
+    console.log(pinMatrix)
+
+    let eth = 0;
+    let bit = 0;
 
     // listen to onmessage event
-    this.connection.onmessage = e => {
-        const data = JSON.parse(e.data);
-        let today = new Date();
-        let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    connection.onmessage = e => {
+      console.log('** in',priceData)
+      const data = JSON.parse(e.data);
+      let today = new Date();
+      let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 
+      let ethereumUpdate = {
+        x: time,
+        y: data.ethereum
+      };
+      let bitcoinUpdate = {
+        x: time,
+        y: data.bitcoin
+      };
+      eth = ethereumUpdate
+      bit = bitcoinUpdate
 
-        let ethereumUpdate = {
-          x: time,
-          y: data.ethereum
-        };
-        let bitcoinUpdate = {
-          x: time,
-          y: data.bitcoin
-        };
-        this.eth = ethereumUpdate
-        this.bit = bitcoinUpdate
-
-        if (data.ethereum && data.bitcoin) {
-          console.log(data.ethereum);
-
-          this.setState({
-            priceData: [{
-              ethereum: [...this.state.priceData[0].ethereum, ethereumUpdate],
-              bitcoin: [...this.state.priceData[0].bitcoin, bitcoinUpdate],
-            }]
-          })
-        } else if (data.bitcoin) {
-          this.setState({
-            priceData: [{
-              ethereum: [...this.state.priceData[0].ethereum],
-              bitcoin: [...this.state.priceData[0].bitcoin, bitcoinUpdate]
-            }]
-          })
-        } else if (data.ethereum) {
-          this.setState({
-            priceData: [{
-              ethereum: [...this.state.priceData[0].ethereum, ethereumUpdate],
-              bitcoin: [...this.state.priceData[0].bitcoin]
-            }]
-          })
-        }
+      if (data.ethereum && data.bitcoin) {
+        console.log(data.ethereum);
+        setPriceData((prevState) => ({
+          ethereum: [...prevState.ethereum, ethereumUpdate],
+          bitcoin: [...prevState.bitcoin, bitcoinUpdate],
+        }))
+      } else if (data.bitcoin) {
+        setPriceData((prevState) => ({
+          ...prevState,
+          bitcoin: [...prevState.bitcoin, bitcoinUpdate],
+        }))
+      } else if (data.ethereum) {
+        setPriceData((prevState) => ({
+          ...prevState,
+          ethereum: [...prevState.ethereum, ethereumUpdate],
+        }))
       }
     }
 
-  componentDidMount() {
-    this.getPrices();
-    console.log(this.bit.data)
-    if (this.bit.data) {
-      let bitcoinPrice = this.bit.data.x;
-      this.bitcoinSynth.frequency.value = this.bitcoinPrice;
-      this.bitcoinSynth.triggerAttack();
+
+
+    console.log(bit.data)
+    if (bit.data) {
+      let bitcoinPrice = bit.data.x;
+      bitcoinSynth.frequency.value = bitcoinPrice;
+      bitcoinSynth.triggerAttack();
       console.log("synth started");
     }
 
+  }, [])
 
-  //
-  //   setInterval(() => {
-  //     // had to put this here rather than componentDidMount
-  //     if (this.state.priceData[0].ethereum[0].length > 0) {
-  //       this.ethSynth.triggerAttack(
-  //         this.bit.eth.x / 8
-  //       );
-  //     }
-  //   }, this.randomTriggerInterval()); // MembraneSynth is triggered by the amount of seconds determined by the random Interval generator
-  //
-  //
-  //   setInterval(() => {
-  //     let today = new Date();
-  //     let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-  //
-  //     this.setState({
-  //       priceData: [
-  //         {
-  //         bitcoin: [...this.state.priceData[0].bitcoin[0]],
-  //         ethereum: [{id: 'eth', data: {x: [...this.state.priceData[0].ethereum[0].data.x], y: [...this.state.priceData[0].currentTimes, time] }}],
-  //         currentTimes: [...this.state.priceData[0].currentTimes, time]
-  //         }
-  //       ]
-  //     })
-  //   }, 1000)
-  //
-  //   setInterval(() => {
-  //     if (this.state.priceData[0].bitcoin[0].data.x.length > 0) {
-  //       this.bitcoinSynth.frequency.value =
-  //         this.state.priceData[0].bitcoin[0].data.x[
-  //           this.state.priceData[0].bitcoin[0].data.x.length - 1
-  //         ] / 25; // selects last item in array, bringing down the frequency to something more manageable
-  //       console.log(this.bitcoinSynth.frequency.value);
-  //     }
-  //   }, 1000); // osc frequency is updated every second
-   }
 
-  randomTriggerInterval = () => Math.floor(Math.random() * 15000) + 1000; // random generates number between 1 and 15
+  const randomTriggerInterval = () => Math.floor(Math.random() * 15000) + 1000; // random generates number between 1 and 15
 
-  handleClick = () => {}
+  const handleClick = () => {}
 
-  render() {
-    console.log(this.state.priceData)
-    return (
-      <div className="App">
-        <h1> bitcoin: {this.state.priceData[0].bitcoin[this.state.priceData[0].bitcoin.length -1].x} </h1>
-        <h1> ethereum: {this.state.priceData[0].ethereum[this.state.priceData[0].ethereum.length -1].x} </h1>
-        <button onClick={this.handleClick}> Start Synth </button>
-        <div className="Chart-Container" style= {{ height: '10em', width: '10em' }}>
-        <Chart priceData={this.state.priceData}/>
-        </div>
+  return (
+    <div className="App">
+      <h1> bitcoin: {priceData.bitcoin[priceData.bitcoin.length - 1].y} </h1>
+      <h1> ethereum: {priceData.ethereum[priceData.ethereum.length - 1].y} </h1>
+      <button onClick={handleClick}> Start Synth </button>
+      <div className="Chart-Container" style={{ height: '10em', width: '10em' }}>
+        <Chart priceData={priceData} />
       </div>
-    );
-  }
+    </div>
+  );
+
 }
 export default App;

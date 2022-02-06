@@ -15,6 +15,7 @@ const commonProperties = {
   enableGridY: false
 };
 
+
 const Chart = ({ priceData }) => (
   <ResponsiveLine
     width={1000}
@@ -35,19 +36,19 @@ const Chart = ({ priceData }) => (
         type: "linear",
         stacked: false,
         min: 0,
-        max: 20000
+        max: 70000
       }
     }
     data={[
       {
         id: "Bitcoin",
-        data: priceData[0].bitcoin
+        data: priceData.bitcoin
       },
       {
         id: "Eth",
-        data: priceData[0].ethereum
+        data: priceData.ethereum
       }
-        ]}
+    ]}
     />
 );
 
