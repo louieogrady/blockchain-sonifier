@@ -13,8 +13,7 @@ function App() {
   const [pinMatrix, setPinMatrix] = useState(initialPinMatrixState);
   const [priceData, setPriceData] = useState(initialPriceDataState);
 
-  let eth = 0
-  let bit = 0
+
 
   const autoFilter = new Tone.AutoFilter("4n").toMaster().start();
   // create synths
@@ -38,19 +37,22 @@ function App() {
   const ethSynth = new Tone.MembraneSynth().toMaster();
 
   // coincap websockets
-  const pricesWs = "wss://ws.coincap.io/prices?assets=bitcoin";
+  const connection = new WebSocket(
+    "wss://ws.coincap.io/prices?assets=bitcoin,ethereum"
+  );
 
-  const getPrices = () => {
-    const connection = new WebSocket(
-      "wss://ws.coincap.io/prices?assets=bitcoin,ethereum"
-    );
+  useEffect(() => {
+    console.log(pinMatrix)
+
+    let eth = 0;
+    let bit = 0;
 
     // listen to onmessage event
     connection.onmessage = e => {
+      console.log('** in',priceData)
       const data = JSON.parse(e.data);
       let today = new Date();
       let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-
 
       let ethereumUpdate = {
         x: time,
@@ -65,44 +67,34 @@ function App() {
 
       if (data.ethereum && data.bitcoin) {
         console.log(data.ethereum);
-
-        setPriceData({
-          priceData: [{
-            ethereum: [...priceData.ethereum, ethereumUpdate],
-            bitcoin: [...priceData.bitcoin, bitcoinUpdate],
-          }]
-        })
+        setPriceData((prevState) => ({
+          ethereum: [...prevState.ethereum, ethereumUpdate],
+          bitcoin: [...prevState.bitcoin, bitcoinUpdate],
+        }))
       } else if (data.bitcoin) {
-        setPriceData({
-          priceData: [{
-            ethereum: [...priceData.ethereum],
-            bitcoin: [...priceData.bitcoin, bitcoinUpdate]
-          }]
-        })
+        setPriceData((prevState) => ({
+          ...prevState,
+          bitcoin: [...prevState.bitcoin, bitcoinUpdate],
+        }))
       } else if (data.ethereum) {
-        setPriceData({
-          priceData: [{
-            ethereum: [...priceData.ethereum, ethereumUpdate],
-            bitcoin: [...priceData.bitcoin]
-          }]
-        })
+        setPriceData((prevState) => ({
+          ...prevState,
+          ethereum: [...prevState.ethereum, ethereumUpdate],
+        }))
       }
     }
-  }
 
-  // useEffect(() => {
-  //   console.log(pinMatrix)
-  //   console.log(priceData)
 
-  //   getPrices();
-  //   console.log(bit.data)
-  //   if (bit.data) {
-  //     let bitcoinPrice = bit.data.x;
-  //     bitcoinSynth.frequency.value = bitcoinPrice;
-  //     bitcoinSynth.triggerAttack();
-  //     console.log("synth started");
-  //   }
-  // }, [])
+
+    console.log(bit.data)
+    if (bit.data) {
+      let bitcoinPrice = bit.data.x;
+      bitcoinSynth.frequency.value = bitcoinPrice;
+      bitcoinSynth.triggerAttack();
+      console.log("synth started");
+    }
+
+  }, [])
 
 
   const randomTriggerInterval = () => Math.floor(Math.random() * 15000) + 1000; // random generates number between 1 and 15
