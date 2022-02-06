@@ -36,6 +36,8 @@ function App() {
 
   const ethSynth = new Tone.Oscillator().toDestination();
 
+
+  // TODO: CHANGE to bitfinex websockets: https://docs.bitfinex.com/reference#rest-public-ticker
   // coincap websockets
   const connection = new WebSocket(
     "wss://ws.coincap.io/prices?assets=bitcoin,ethereum"
